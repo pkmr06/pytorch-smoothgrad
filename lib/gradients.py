@@ -40,6 +40,12 @@ class SmoothGrad(VanillaGrad):
     def __init__(self, pretrained_model, cuda=False, stdev_spread=0.15,
                  n_samples=25, magnitude=True):
         super(SmoothGrad, self).__init__(pretrained_model, cuda)
+        """
+        self.pretrained_model = pretrained_model
+        self.features = pretrained_model.features
+        self.cuda = cuda
+        self.pretrained_model.eval()
+        """
         self.stdev_spread = stdev_spread
         self.n_samples = n_samples
         self.magnitutde = magnitude
