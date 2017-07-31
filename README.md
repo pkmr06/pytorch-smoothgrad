@@ -4,7 +4,7 @@ PyTorch implementation of [SmoothGrad: removing noise by adding noise](https://a
 
 |Vanilla Gradients|SmoothGrad|Guided backpropagation|Guided SmoothGrad|
 |:-:|:-:|:-:|:-:|:-:|
-|<img src="result/grad/vanilla_grad.jpg" width="180px">|<img src="result/grad/smooth_grad.jpg" width="180px">|<img src="result/grad/guided_grad.jpg" width="180px">|<img src="result/grad/guided_smooth_grad.jpg" width="180px">|
+|![](result/grad/vanilla_gard.jpg)|![](results/grad/smooth_grad.jpg)|![](results/grad/guided_grad.jpg)|![](results/grad/guided_smooth_grad.jpg)|
 
 And other techniques such as the following are implemented.
 
