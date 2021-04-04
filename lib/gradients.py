@@ -27,7 +27,7 @@ class VanillaGrad(object):
             one_hot = Variable(torch.from_numpy(one_hot), requires_grad=True)
         one_hot = torch.sum(one_hot * output)
 
-        one_hot.backward(retain_variables=True)
+        one_hot.backward(retain_graph=True)
 
         grad = x.grad.data.cpu().numpy()
         grad = grad[0, :, :, :]
@@ -76,7 +76,7 @@ class SmoothGrad(VanillaGrad):
 
             if x_plus_noise.grad is not None:
                 x_plus_noise.grad.data.zero_()
-            one_hot.backward(retain_variables=True)
+            one_hot.backward(retain_graph=True)
 
             grad = x_plus_noise.grad.data.cpu().numpy()
 
@@ -97,17 +97,19 @@ class GuidedBackpropReLU(torch.autograd.Function):
         super(GuidedBackpropReLU, self).__init__()
         self.inplace = inplace
 
-    def forward(self, input):
+    @staticmethod
+    def forward(ctx, input):
         pos_mask = (input > 0).type_as(input)
         output = torch.addcmul(
             torch.zeros(input.size()).type_as(input),
             input,
             pos_mask)
-        self.save_for_backward(input, output)
+        ctx.save_for_backward(input, output)
         return output
 
-    def backward(self, grad_output):
-        input, output = self.saved_tensors
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, output = ctx.saved_tensors
 
         pos_mask_1 = (input > 0).type_as(grad_output)
         pos_mask_2 = (grad_output > 0).type_as(grad_output)
@@ -131,7 +133,7 @@ class GuidedBackpropGrad(VanillaGrad):
         super(GuidedBackpropGrad, self).__init__(pretrained_model, cuda)
         for idx, module in self.features._modules.items():
             if module.__class__.__name__ is 'ReLU':
-                self.features._modules[idx] = GuidedBackpropReLU()
+                self.features._modules[idx] = GuidedBackpropReLU.apply
 
 
 class GuidedBackpropSmoothGrad(SmoothGrad):
@@ -141,7 +143,7 @@ class GuidedBackpropSmoothGrad(SmoothGrad):
             pretrained_model, cuda, stdev_spread, n_samples, magnitude)
         for idx, module in self.features._modules.items():
             if module.__class__.__name__ is 'ReLU':
-                self.features._modules[idx] = GuidedBackpropReLU()
+                self.features._modules[idx] = GuidedBackpropReLU.apply
 
 
 class FeatureExtractor(object):
@@ -198,7 +200,7 @@ class GradCam(object):
         one_hot = torch.sum(one_hot * output)
 
         self.pretrained_model.zero_grad()
-        one_hot.backward(retain_variables=True)
+        one_hot.backward(retain_graph=True)
 
         grads = self.extractor.get_gradients()[-1].data.cpu().numpy()
 
